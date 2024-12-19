@@ -1,0 +1,11 @@
+21456 55548 1 hafedh_hammami h 21 2 4 2045 5 t 1
+21456 55548 2 hafedh_hammami h 21 2 4 2045 5 t 0
+21456 55548 2 hafedh_hammami h 21 2 20045 4 5 t 1
+21456 55548 3 hafedh_hammami h 21 2 20145 4 5 t 0
+21456 55548 1 hafedh_hammami h 21 2 4 2045 5 t 2
+4 55548 5 ahmed h 21 2 205 4 5 t 1
+21456 55548 4 hafedh_hammami h 21 2 20415 4 5 t 2
+21456 55548 4 hafedh_hammami h 21 2 20415 4 5 t 3
+21456 55548 1 hafedh_hammami h 21 2 20415 4 5 t 3
+21456 55548 4 hafedh_hammami h 21 2 20145 4 5 t 3
+21456 55548 5 hafedh_hammami h 21 2 4 2045 5 t 3

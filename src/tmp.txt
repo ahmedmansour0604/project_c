@@ -1,0 +1,5 @@
+make[1]: Entering directory '/home/ahmed/Downloads/project _C_16_11vf/project2/src'
+ /bin/mkdir -p '/usr/local/bin'
+  /usr/bin/install -c project_c '/usr/local/bin'
+make[1]: Nothing to be done for 'install-data-am'.
+make[1]: Leaving directory '/home/ahmed/Downloads/project _C_16_11vf/project2/src'

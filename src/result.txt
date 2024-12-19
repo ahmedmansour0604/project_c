@@ -1,0 +1,12 @@
+1 100 1001 3.000000 comment 1 9 1999 motif oo h
+3 102 1001 3.000000 comment 3 9 2000 motif nn f
+5 104 1001 1.000000 comment 5 9 2000 motif by f
+6 104 1001 2.000000 comment 5 9 2000 motif by f
+11 100 1001 3.000000 comment 1 9 1999 motif oo h
+13 102 1001 3.000000 comment 3 9 2000 motif nn f
+15 104 1001 1.000000 comment 5 9 2000 motif by f
+16 104 1001 2.000000 comment 5 9 2000 motif by f
+21 100 1001 3.000000 comment 1 9 1999 motif oo h
+23 102 1001 3.000000 comment 3 9 2000 motif nn f
+25 104 1001 1.000000 comment 5 9 2000 motif by f
+26 104 1001 2.000000 comment 5 9 2000 motif by f
