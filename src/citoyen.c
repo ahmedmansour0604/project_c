@@ -5,7 +5,7 @@
 
 #include "reservation.h"
 #include "parking.h"
-#include "service.h"
+#include "crud.h"
 //*/
 
 int rep_space_udnder(char *p){
@@ -199,21 +199,23 @@ float calculer_facture_citoyen(char * basereservation,char * baseparking,char * 
 	float total=0;
     FILE *f2=fopen(facture,"w");
     if (f2==NULL) return -1;
-	while(fscanf(f,"%d %d %d %s %c %d %d %d %d %d %c %d\n",&p.id_res, &p.id_cl, &p.id_pk, p.nep, &p.h_f, &p.id_mt, &p.jdr, &p.mdr, &p.adr, &p.drr, &p.mdp, &p.id_ser)!=EOF)
+	while(fscanf(f,"%d %d %d %s %c %d %d %d %d %d %c %d\n",&p.id_res, &p.id_cl, &p.id_pk, p.nep, &p.h_f, &p.id_mt, &p.jdr, &p.mdr, &p.adr, &p.drr, &p.mdp, &p.ser)==12)
 	{
-		//printf("%d %d %d\n",p.id_cl==id_c, p.mdr==mois, p.adr==annee);
+		printf("calcule %d %d %d\n",p.id_cl==id_c, p.mdr==mois, p.adr==annee);
 		if (p.id_cl==id_c && p.mdr==mois && p.adr==annee)
 		{
 			Parking par=rechercherParking(baseparking, p.id_pk);
 			//printf("%d\n",par.tarif);
 			total+=par.tarif*p.drr;
-            fprintf(f2,"p %d %s %f\n",par.id,par.nom,(float)par.tarif);
+            fprintf(f2,"p %d %s %f\n",par.id,par.nom,par.tarif);
 			//ajouter_reservation("temp.facture.mois",p);
-			if(p.id_ser!=0) {
-				service s=rechercher_service(baseservice, p.id_ser);
-				fprintf(f2,"s %d %s %f\n",s.id_sc,s.nom,s.tarif);
+			if(p.ser!=0) {
+				printf("test avant\n");
+				service s=rechercher_service(baseservice, p.ser);
+				printf("test qpres\n");
+				fprintf(f2,"s %d %s %d\n",s.id_sc,s.nom_sc,s.tarif_sc);
                 //ajouter_service("temp.facture.mois",s) ;
-				total+=s.tarif; 
+				total+=s.tarif_sc; 
 			}
 		}
 	}

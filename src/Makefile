@@ -101,7 +101,7 @@ am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
 am_project_c_OBJECTS = main.$(OBJEXT) support.$(OBJEXT) \
 	interface.$(OBJEXT) callbacks.$(OBJEXT) citoyen.$(OBJEXT) \
-	avis.$(OBJEXT) parking.$(OBJEXT) service.$(OBJEXT) \
+	avis.$(OBJEXT) parking.$(OBJEXT) crud.$(OBJEXT) \
 	reservation.$(OBJEXT)
 project_c_OBJECTS = $(am_project_c_OBJECTS)
 am__DEPENDENCIES_1 =
@@ -287,7 +287,7 @@ project_c_SOURCES = \
 	citoyen.c citoyen.h \
 	avis.c avis.h \
 	parking.c parking.h \
-	service.c service.h \
+	crud.c crud.h \
 	reservation.c reservation.h
 
 project_c_LDADD = -lgtk-x11-2.0 -lgdk-x11-2.0 -lpangocairo-1.0 -latk-1.0 -lcairo -lgdk_pixbuf-2.0 -lgio-2.0 -lpangoft2-1.0 -lpango-1.0 -lgobject-2.0 -lglib-2.0 -lfontconfig -lfreetype $(INTLLIBS)
@@ -380,11 +380,11 @@ distclean-compile:
 include ./$(DEPDIR)/avis.Po
 include ./$(DEPDIR)/callbacks.Po
 include ./$(DEPDIR)/citoyen.Po
+include ./$(DEPDIR)/crud.Po
 include ./$(DEPDIR)/interface.Po
 include ./$(DEPDIR)/main.Po
 include ./$(DEPDIR)/parking.Po
 include ./$(DEPDIR)/reservation.Po
-include ./$(DEPDIR)/service.Po
 include ./$(DEPDIR)/support.Po
 
 .c.o:

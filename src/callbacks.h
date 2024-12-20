@@ -197,3 +197,208 @@ on_modfier_p_annuler_clicked           (GtkWidget      *objet_graphique,
 void
 on_annul_ajout_button_clicked          (GtkWidget       *objet_graphique,
                                         gpointer         user_data);
+
+
+
+
+void
+on_radiobutton_a_oui_sv_toggled        (GtkToggleButton *togglebutton,
+                                        gpointer         user_data);
+
+void
+on_radiobutton_a_d_sv_toggled          (GtkToggleButton *togglebutton,
+                                        gpointer         user_data);
+
+void
+on_button_a_sv_clicked                 (GtkWidget       *button,
+                                        gpointer         user_data);
+
+void
+on_button_sup_aj_sv_clicked            (GtkWidget       *button,
+                                        gpointer         user_data);
+
+void
+on_button_modif_sv_clicked             (GtkWidget       *button,
+                                        gpointer         user_data);
+
+void
+on_button_a_modif_sv_clicked           (GtkWidget       *button,
+                                        gpointer         user_data);
+
+void
+on_checkbutton_o_m_toggled             (GtkToggleButton *togglebutton,
+                                        gpointer         user_data);
+
+void
+on_checkbutton_n_m_toggled             (GtkToggleButton *togglebutton,
+                                        gpointer         user_data);
+
+void
+on_button_r_id_sv_m_clicked            (GtkWidget       *button,
+                                        gpointer         user_data);
+
+void
+on_button_aff_sv_clicked               (GtkWidget       *button,
+                                        gpointer         user_data);
+
+void
+on_button_supprimmer_sv_clicked        (GtkWidget       *button,
+                                        gpointer         user_data);
+
+void
+on_button_rch_sv_clicked               (GtkWidget       *button,
+                                        gpointer         user_data);
+
+void
+on_button_rech_affect_clicked          (GtkWidget       *button,
+                                        gpointer         user_data);
+
+void
+on_button_affect_clicked               (GtkWidget       *button,
+                                        gpointer         user_data);
+
+void
+on_button_a_agent_clicked              (GtkWidget       *button,
+                                        gpointer         user_data);
+
+void
+on_radiobutton_a_h_agen_toggled        (GtkToggleButton *togglebutton,
+                                        gpointer         user_data);
+
+void
+on_radiobutton_a_f_age_toggled         (GtkToggleButton *togglebutton,
+                                        gpointer         user_data);
+
+void
+on_checkbutton_a_e_n_toggled           (GtkToggleButton *togglebutton,
+                                        gpointer         user_data);
+
+void
+on_checkbutton_a_e_o_toggled           (GtkToggleButton *togglebutton,
+                                        gpointer         user_data);
+
+void
+on_button_aff_ag_clicked               (GtkWidget       *button,
+                                        gpointer         user_data);
+
+void
+on_button_modifier_agent_clicked       (GtkWidget       *button,
+                                        gpointer         user_data);
+
+void
+on_button_r_id_ag_clicked              (GtkWidget       *button,
+                                        gpointer         user_data);
+
+void
+on_checkbutton_o_m_a_toggled           (GtkToggleButton *togglebutton,
+                                        gpointer         user_data);
+
+void
+on_checkbutton_n_m_a_toggled           (GtkToggleButton *togglebutton,
+                                        gpointer         user_data);
+
+void
+on_radiobutton_h_m_a_toggled           (GtkToggleButton *togglebutton,
+                                        gpointer         user_data);
+
+void
+on_radiobutton_f_m_a_toggled           (GtkToggleButton *togglebutton,
+                                        gpointer         user_data);
+
+void
+on_button_supprimer_agent_clicked      (GtkWidget       *button,
+                                        gpointer         user_data);
+
+void
+on_button_recher_a_clicked             (GtkWidget       *button,
+                                        gpointer         user_data);
+
+void
+on_button_r_r_aff_clicked              (GtkWidget       *button,
+                                        gpointer         user_data);
+
+void
+on_button_r_s_aff_clicked              (GtkWidget       *button,
+                                        gpointer         user_data);
+
+
+void
+on_button_affect_service_clicked       (GtkWidget       *button,
+                                        gpointer         user_data);
+
+void
+on_button_afficher_historique_clicked  (GtkWidget       *button,
+                                        gpointer         user_data);
+
+
+void
+on_buttonajouter_clicked                (GtkWidget *objet_graphique, 
+					 gpointer       user_data);
+
+
+
+void
+on_radioresmdpc_toggled                (GtkToggleButton *togglebutton,
+                                        gpointer         user_data);
+
+void
+on_radioresmdpe_toggled                (GtkToggleButton *togglebutton,
+                                        gpointer         user_data);
+
+void
+on_radiogenm_toggled                   (GtkToggleButton *togglebutton,
+                                        gpointer         user_data);
+
+void
+on_radiogenf_toggled                   (GtkToggleButton *togglebutton,
+                                        gpointer         user_data);
+
+void
+on_buttonafficher_clicked              (GtkButton       *button,
+                                        gpointer         user_data);
+
+void
+on_buttonrid_clicked                   (GtkButton       *button,
+                                        gpointer         user_data);
+
+void
+on_radiomsm_toggled                    (GtkToggleButton *togglebutton,
+                                        gpointer         user_data);
+
+void
+on_radiompre_toggled                   (GtkToggleButton *togglebutton,
+                                        gpointer         user_data);
+
+void
+on_radiomprc_toggled                   (GtkToggleButton *togglebutton,
+                                        gpointer         user_data);
+
+void
+on_buttonmres_clicked                  (GtkButton       *button,
+                                        gpointer         user_data);
+
+void
+on_buttonaffectres_clicked             (GtkWidget       *objet_graphique,
+                                        gpointer         user_data);
+
+void
+on_radiomsf_toggled                    (GtkToggleButton *togglebutton,
+                                        gpointer         user_data);
+
+void
+on_buttonsupres_clicked                (GtkButton       *button,
+                                        gpointer         user_data);
+
+void
+on_button_recherche_clicked            (GtkButton       *button,
+                                        gpointer         user_data);
+
+void
+on_buttonaffectationpark_clicked       (GtkButton       *button,
+                                        gpointer         user_data);
+
+void
+on_treeviewaffres_row_activated        (GtkTreeView     *treeview,
+                                        GtkTreePath     *path,
+                                        GtkTreeViewColumn *column,
+                                        gpointer         user_data);

@@ -1,5 +1,4 @@
 1,15,amen,ariana,esprit,3,23141994,1,o,o,150,48
 2,15,amen,ariana,esprit,3,23141994,12,o,o,150,48
-3,15,amen,ariana,esprit,3,23141994,123,o,o,150,48
 4,15,amen,ariana,esprit,3,23141994,1234,o,o,150,48
 5,15,amen,ariana,esprit,3,23141994,12345,o,o,150,48

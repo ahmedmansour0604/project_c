@@ -101,7 +101,7 @@ am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
 am_project_c_OBJECTS = main.$(OBJEXT) support.$(OBJEXT) \
 	interface.$(OBJEXT) callbacks.$(OBJEXT) citoyen.$(OBJEXT) \
-	avis.$(OBJEXT) parking.$(OBJEXT) service.$(OBJEXT) \
+	avis.$(OBJEXT) parking.$(OBJEXT) crud.$(OBJEXT) \
 	reservation.$(OBJEXT)
 project_c_OBJECTS = $(am_project_c_OBJECTS)
 am__DEPENDENCIES_1 =
@@ -287,7 +287,7 @@ project_c_SOURCES = \
 	citoyen.c citoyen.h \
 	avis.c avis.h \
 	parking.c parking.h \
-	service.c service.h \
+	crud.c crud.h \
 	reservation.c reservation.h
 
 project_c_LDADD = @PACKAGE_LIBS@ $(INTLLIBS)
@@ -380,11 +380,11 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/avis.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/callbacks.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/citoyen.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/crud.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/interface.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/main.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/parking.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/reservation.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/service.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/support.Po@am__quote@
 
 .c.o:

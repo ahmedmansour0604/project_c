@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "parking.h"
+#include "crud.h"
 #include <ctype.h>
 #include <gtk/gtk.h>
 
@@ -355,7 +356,7 @@ void affecteragent(const char* filenamep,char* filenamea,int idparking,int cinag
 	if(a.cin_a!=-1)
 	{
 		a.parking=p.id;
-		modifier_agent(filenamea,a);
+		modifier_agent1(filenamea,a);
 	}
 }
 
@@ -740,106 +741,7 @@ void afficher_parkingsansagent(const char* filename, GtkWidget *liste) {
 
 
 
-
-//AGENT
-#include "parking.h"
-#include <string.h>
-#include <stdio.h>
-
-
-// Function to add an agent
-int ajouter_agent(char * fileName, agent a)
-{
-    FILE * f = fopen(fileName, "a");
-    if (f != NULL)
-    {
-        fprintf(f, "%d %s %s %d:%d:%d %s %s %f %d %d %d\n", a.cin_a, a.nom, a.prenom, a.naissance.j, a.naissance.m, a.naissance.a, a.adresse, a.e_mail, a.salaire, a.sexe, a.experience, a.parking);
-        fclose(f);
-        return 1;
-    }
-    else return 0;
-}
-
-
-
-// Function to modify an agent
-int modifier_agent(char *fileName, agent m)
-{
-    int tr = 0;
-    agent a;
-    FILE * f = fopen(fileName, "r");
-    FILE * f2 = fopen("temp.txt", "w");
-    if (f != NULL && f2 != NULL)
-    {
-        while (fscanf(f, "%d %s %s %d:%d:%d %s %s %f %d %d %d\n", &a.cin_a, a.nom, a.prenom, &a.naissance.j, &a.naissance.m, &a.naissance.a, a.adresse, a.e_mail, &a.salaire, &a.sexe, &a.experience, &a.parking) != EOF)
-        {
-            if (a.cin_a != m.cin_a)
-            {
-                fprintf(f2, "%d %s %s %d:%d:%d %s %s %f %d %d %d\n", a.cin_a, a.nom, a.prenom, a.naissance.j, a.naissance.m, a.naissance.a, a.adresse, a.e_mail, a.salaire, a.sexe, a.experience, a.parking);
-            }
-            else
-            {
-                fprintf(f2, "%d %s %s %d:%d:%d %s %s %f %d %d %d\n", m.cin_a, m.nom, m.prenom, m.naissance.j, m.naissance.m, m.naissance.a, m.adresse, m.e_mail, m.salaire, m.sexe, m.experience, m.parking);
-                tr = 1;
-            }
-        }
-    }
-    fclose(f);
-    fclose(f2);
-    remove(fileName);
-    rename("temp.txt", fileName);
-    return tr;
-}
-
-
-
-// Function to delete an agent
-int supprimer_agent(char *fileName, int cin_a)
-{
-    int tr = 0;
-    agent a;
-    FILE * f = fopen(fileName, "r");
-    FILE * f2 = fopen("corbeille.txt", "w");
-    if (f != NULL && f2 != NULL)
-    {
-        while (fscanf(f, "%d %s %s %d:%d:%d %s %s %f %d %d %d\n", &a.cin_a, a.nom, a.prenom, &a.naissance.j, &a.naissance.m, &a.naissance.a, a.adresse, a.e_mail, &a.salaire, &a.sexe, &a.experience, &a.parking) != EOF)
-        {
-            if (a.cin_a == cin_a)
-                tr = 1;
-            else
-                fprintf(f2, "%d %s %s %d:%d:%d %s %s %f %d %d %d\n", a.cin_a, a.nom, a.prenom, a.naissance.j, a.naissance.m, a.naissance.a, a.adresse, a.e_mail, a.salaire, a.sexe, a.experience, a.parking);
-        }
-    }
-    fclose(f);
-    fclose(f2);
-    remove(fileName);
-    rename("corbeille.txt", fileName);
-    return tr;
-}
-
-// Function to search for an agent
-agent rechercher_agent(char *fileName, int cin_a)
-{
-    agent a;
-    int tr = 0;
-    FILE * f = fopen(fileName, "r");
-    if (f != NULL)
-    {
-        while (tr == 0 && fscanf(f, "%d %s %s %d:%d:%d %s %s %f %d %d %d\n", &a.cin_a, a.nom, a.prenom, &a.naissance.j, &a.naissance.m, &a.naissance.a, a.adresse, a.e_mail, &a.salaire, &a.sexe, &a.experience, &a.parking) != EOF)
-        {
-            if (a.cin_a == cin_a)
-            {
-                tr = 1;
-                fclose(f);
-                return a;
-            }
-        }
-        fclose(f);
-    }
-    if (tr == 0)
-        a.cin_a = -1;
-    return a;
-}
+/*
 
 void vider_agent(GtkWidget *liste) {
     GtkCellRenderer *renderer;
@@ -942,53 +844,8 @@ void afficheragent(const char* filename, GtkWidget *liste) {
     fclose(f);
 }
 
-void afficheragentsansparking(const char* filename, GtkWidget *liste) {
-    GtkCellRenderer *renderer;
-    GtkTreeIter iter;
-    GtkListStore *store;
 
-    store = GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(liste)));
-    if (!store) {
-        vider(liste);  
-        store = GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(liste)));
-    }
-
-    FILE *f = fopen(filename, "r");
-    if (!f) {
-        g_print("Erreur lors de l'ouverture du fichier: %s\n", filename);
-        return;
-    }
-
-    char line[512];
-    agent a;
-    char naissance_str[20];
-
-    while (fgets(line, sizeof(line), f)) {
-        sscanf(line, "%d %49s %49s %d:%d:%d %99s %99s %f %d %d %d",
-               &a.cin_a, a.nom, a.prenom, &a.naissance.j, &a.naissance.m, &a.naissance.a,
-               a.adresse, a.e_mail, &a.salaire, &a.sexe, &a.experience, &a.parking);
-	if (a.parking==0){
-
-		sprintf(naissance_str, "%02d/%02d/%04d", a.naissance.j, a.naissance.m, a.naissance.a);
-
-		gtk_list_store_append(store, &iter);
-		gtk_list_store_set(store, &iter,
-		                   0, g_strdup_printf("%d", a.cin_a),
-		                   1, a.nom,
-		                   2, a.prenom,
-		                   3, a.adresse,
-		                   4, a.e_mail,
-		                   5, g_strdup_printf("%.2f", a.salaire),
-		                   6, (a.sexe == 1 ? "Homme" : "Femme"),
-		                   7, g_strdup_printf("%d", a.experience),
-		                   8, g_strdup_printf("%d", a.parking),
-		                   9, naissance_str,
-		                   -1);
-    	}
-    }
-
-    fclose(f);
-}
+*/
 
 
 
