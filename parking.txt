@@ -1,0 +1,6 @@
+6,0,nbm,Ben Arous,bjbk,1,14785236,21,Y,N,1,1
+7,335,dghb,Zaghouen,bgr,1,14589632,10,Y,N,1,1
+8,12,ghj,Sousse,bjmnk,1,20014789,10,Y,N,1,1
+9,0,wala,Sousse,bjmnk,1,20014789,10,Y,N,1,1
+13,0,ss,Nbeul,mahdia,10,12345789,10,Y,N,5,5
+15,0,wala,Sfax,cvbbn,2,12457896,10,Y,N,50,50

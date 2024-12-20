@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "avis.h"
+#include "parking.h"
 
 #define bdd_citoyen "citoyen.txt"
 #define bdd_avis "avis.txt"
@@ -1769,5 +1770,1812 @@ on_button74_clicked                    (GtkButton       *button,
 	fclose(f);
 	gtk_tree_view_set_model(GTK_TREE_VIEW(liste),GTK_TREE_MODEL(store));
 	g_object_unref(store);//*/
+}
+
+
+/*
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
+#include <gtk/gtk.h>
+
+#include "callbacks.h"
+#include "interface.h"
+#include "parking.h"
+#include "support.h"
+#include <ctype.h>*/
+
+
+int recherche_par[3]={0,0,0}; // 0:id 1:nom: 2:region
+int id_parking_affecter=-1;
+int id_agent_affecter=-1;
+int etat=0;
+int id_p_a_modif=-1;
+
+int is_only_digits(const char *str) {
+    while (*str) {
+        if (!isdigit(*str)) {
+            return 0;
+        }
+        str++;
+    }
+    return 1;
+}
+
+int is_only_alpha(const char *str) {
+    while (*str) {
+        if (!isalpha(*str)) {
+            return 0;
+        }
+        str++;
+    }
+    return 1; 
+}
+
+int is_file_empty(const char *filename) {
+    FILE *file = fopen(filename, "r");
+    if (file == NULL) {
+
+        return -1; 
+    }
+
+
+    fseek(file, 0, SEEK_END);
+    long size = ftell(file); 
+    fclose(file);
+
+    return (size == 0); 
+}
+
+char est_couvert='N';
+char supporte_pour_handicappe ='N';
+char m_est_couvert='N';
+char m_supporte_pour_handicappe ='N';
+
+
+void
+on_checkbutton_pcouvert_toggled        (GtkToggleButton *togglebutton,
+                                        gpointer         user_data)
+{
+	if(gtk_toggle_button_get_active(togglebutton))
+	{
+		est_couvert ='Y';
+	}
+
+}
+void
+on_checkbutton_pnoncouvert_toggled     (GtkToggleButton *togglebutton,
+                                        gpointer         user_data)
+{
+	if(gtk_toggle_button_get_active(togglebutton))
+	{
+		est_couvert ='N';
+	}
+
+}
+
+
+
+void on_button_p_ajouter_clicked(GtkWidget *objet_graphique, gpointer user_data)
+{
+	GtkWidget *nom;
+	GtkWidget *adresse;
+	GtkWidget *region;
+	GtkWidget *places;
+	GtkWidget *nbetages;
+	GtkWidget *couvert;
+	GtkWidget *numero;
+	GtkWidget *tarif;
+	Parking p;
+
+	nom=lookup_widget(objet_graphique,"p_nomtextentry");
+	adresse=lookup_widget(objet_graphique,"p_adressetextentry");
+	region=lookup_widget(objet_graphique,"combobox_p_regionentry");
+	places=lookup_widget(objet_graphique,"spinbutton_pplacesentry");
+	nbetages=lookup_widget(objet_graphique,"spinbutton_pnbetageentry");
+
+	numero=lookup_widget(objet_graphique,"p_numero_textentry");
+	tarif=lookup_widget(objet_graphique,"p_tariftextentry");
+
+	strcpy(p.nom,gtk_entry_get_text(GTK_ENTRY(nom)));
+	strcpy(p.adresse,gtk_entry_get_text(GTK_ENTRY(adresse)));
+	const char *tarif_text = gtk_entry_get_text(GTK_ENTRY(tarif));
+    
+        if (tarif_text != NULL && tarif_text[0] != '\0') 
+	{
+        	p.tarif = atoi(tarif_text); 
+    	} else  {
+        		p.tarif = 0; 
+    		}
+
+	const char *numero_text = gtk_entry_get_text(GTK_ENTRY(numero));
+    
+        if (numero_text != NULL && numero_text[0] != '\0') 
+	{
+        	p.numero_de_telephone = atoi(numero_text); 
+    	} 
+	else  
+	{
+        	p.numero_de_telephone = 0; 
+    	}
+	
+
+	strcpy(p.region,gtk_combo_box_get_active_text(GTK_COMBO_BOX(region)));
+	p.capacite=gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(places));
+	p.nbetages=gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(nbetages));
+	p.est_couvert=est_couvert;
+	p.supporte_pour_handicappe=supporte_pour_handicappe;
+
+
+
+
+
+	
+	if (strlen(p.nom) == 0) {
+		GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(gtk_widget_get_toplevel(objet_graphique)),
+                                               GTK_DIALOG_MODAL,
+                                               GTK_MESSAGE_ERROR,
+                                               GTK_BUTTONS_OK,
+                                               "Le champ 'Nom' est obligatoire !");
+		gtk_dialog_run(GTK_DIALOG(dialog));
+		gtk_widget_destroy(dialog);
+		return;
+	}
+	if (!is_only_alpha(p.nom)) {
+		GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(gtk_widget_get_toplevel(objet_graphique)),
+                                                   GTK_DIALOG_MODAL,
+                                                   GTK_MESSAGE_ERROR,
+                                                   GTK_BUTTONS_OK,
+                                                   "Le champ 'Nom' doit contenir uniquement des lettres !");
+		gtk_dialog_run(GTK_DIALOG(dialog));
+		gtk_widget_destroy(dialog);
+		return;
+	}
+
+	if (gtk_combo_box_get_active(GTK_COMBO_BOX(region)) == -1) {
+    		GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(gtk_widget_get_toplevel(objet_graphique)),
+                                               	GTK_DIALOG_MODAL,
+                                               	GTK_MESSAGE_ERROR,
+                                               	GTK_BUTTONS_OK,
+                                               	"Veuillez sélectionner une région !");
+		gtk_dialog_run(GTK_DIALOG(dialog));
+                gtk_widget_destroy(dialog);
+                return;
+	}
+
+
+
+	if (strlen(p.adresse) == 0) {
+        	GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(gtk_widget_get_toplevel(objet_graphique)),
+                                                   GTK_DIALOG_MODAL,
+                                                   GTK_MESSAGE_ERROR,
+                                                   GTK_BUTTONS_OK,
+                                                   "Le champ 'Adresse' est obligatoire !");
+        	gtk_dialog_run(GTK_DIALOG(dialog));
+        	gtk_widget_destroy(dialog);
+        	return;
+	}
+
+	if (!is_only_digits(tarif_text)) {
+            		GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(gtk_widget_get_toplevel(objet_graphique)),
+                                                       GTK_DIALOG_MODAL,
+                                                       GTK_MESSAGE_ERROR,
+                                                       GTK_BUTTONS_OK,
+                                                       "Le champ 'tarif' doit contenir uniquement des chiffres !");
+			gtk_dialog_run(GTK_DIALOG(dialog));
+			gtk_widget_destroy(dialog);
+			return;
+
+	}
+
+
+
+	if (p.tarif <= 0) 
+	{
+	    	GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(gtk_widget_get_toplevel(objet_graphique)),
+	                                               GTK_DIALOG_MODAL,
+	                                               GTK_MESSAGE_ERROR,
+	                                               GTK_BUTTONS_OK,
+	                                               "Veuillez saisir un tarif valide !");	
+		gtk_dialog_run(GTK_DIALOG(dialog));	
+		gtk_widget_destroy(dialog);
+    		return;
+	}
+
+	
+	if(strlen(numero_text)!=8  ) {
+            		GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(gtk_widget_get_toplevel(objet_graphique)),
+                                                       GTK_DIALOG_MODAL,
+                                                       GTK_MESSAGE_ERROR,
+                                                       GTK_BUTTONS_OK,
+                                                       "Le champ 'Numero de telephone' doit contenir 8  chiffres !");
+			gtk_dialog_run(GTK_DIALOG(dialog));
+			gtk_widget_destroy(dialog);
+			return;
+	
+	
+	}
+	
+	if (numero_text != NULL && strlen(numero_text)==8) {
+        	if (!is_only_digits(numero_text)) {
+            		GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(gtk_widget_get_toplevel(objet_graphique)),
+                                                       GTK_DIALOG_MODAL,
+                                                       GTK_MESSAGE_ERROR,
+                                                       GTK_BUTTONS_OK,
+                                                       "Le champ 'Numero de telephone' doit contenir uniquement des chiffres !");
+			gtk_dialog_run(GTK_DIALOG(dialog));
+			gtk_widget_destroy(dialog);
+			return;
+        }
+
+
+
+
+
+
+
+
+
+	char msg [100];
+	sprintf(msg,"Parking ajouté avec succès  !");
+	ajouterParking("parking.txt",p);
+	GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(gtk_widget_get_toplevel(objet_graphique)),
+                                               GTK_DIALOG_MODAL,
+                                               GTK_MESSAGE_INFO,
+                                               GTK_BUTTONS_OK,
+                                               msg);
+	gtk_dialog_run(GTK_DIALOG(dialog));
+	gtk_widget_destroy(dialog);
+	}
+
+
+	
+	
+
+}
+void
+on_non_supp_radio_toggled              (GtkToggleButton *togglebutton,
+                                        gpointer         user_data)
+{
+	if(gtk_toggle_button_get_active(GTK_RADIO_BUTTON(togglebutton)))
+	{
+		supporte_pour_handicappe='N';
+	}
+
+}
+
+
+
+
+void on_radiobutton_psupportepourhandicappe_toggled(GtkToggleButton *togglebutton, gpointer user_data)
+   
+
+{
+	if(gtk_toggle_button_get_active(GTK_RADIO_BUTTON(togglebutton)))
+	{
+		supporte_pour_handicappe='Y';
+	}
+
+}
+
+
+
+
+
+
+
+
+
+void on_modifier_selectbutton_clicked(GtkWidget *objet_graphique, gpointer user_data) {
+    GtkWidget* id;
+    GtkWidget* nom;
+    GtkWidget* adresse;
+    GtkWidget* region;
+    GtkWidget* capacite;
+    GtkWidget* nbetages;
+    GtkWidget* couvert;
+    GtkWidget* supp;
+    GtkWidget* numero;
+    GtkWidget* tarif;
+    int idr;
+    char capacite_str[20];
+    char nbetages_str[20];
+    char numero_str[20];
+    char tarif_str[20];
+    char msg[50];
+
+    id = lookup_widget(objet_graphique, "modifier_id");
+    const char *id_text = gtk_entry_get_text(GTK_ENTRY(id));
+
+    if (!is_only_digits(id_text)) {
+        GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(gtk_widget_get_toplevel(objet_graphique)),
+                                                   GTK_DIALOG_MODAL,
+                                                   GTK_MESSAGE_ERROR,
+                                                   GTK_BUTTONS_OK,
+                                                   "Le champ 'id' doit contenir uniquement des chiffres !");
+        gtk_dialog_run(GTK_DIALOG(dialog));
+        gtk_widget_destroy(dialog);
+        return;
+    } else {
+        idr = atoi(id_text);
+    }
+
+    Parking p = rechercherParking("parking.txt", idr);
+    if (p.id==-1) {
+
+	
+	sprintf(msg,"parking %d introuvable",idr);
+        GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(gtk_widget_get_toplevel(objet_graphique)),
+                                                   GTK_DIALOG_MODAL,
+                                                   GTK_MESSAGE_ERROR,
+                                                   GTK_BUTTONS_OK,
+                                                   msg);
+        gtk_dialog_run(GTK_DIALOG(dialog));
+        gtk_widget_destroy(dialog);
+	return;
+
+   }
+    id_p_a_modif=idr;
+
+    sprintf(capacite_str, "%d", p.capacite);
+    sprintf(nbetages_str, "%d", p.nbetages);
+    sprintf(tarif_str, "%d", p.tarif); 
+    sprintf(numero_str, "%d", p.numero_de_telephone);
+
+    char* couvert_str = (p.est_couvert == 'Y') ? "Oui" : "Non";
+    char* supp_str = (p.supporte_pour_handicappe == 'Y') ? "Oui" : "Non";
+
+    nom = lookup_widget(objet_graphique, "nomlabel");
+    region = lookup_widget(objet_graphique, "regionlabel");
+    adresse = lookup_widget(objet_graphique, "adresselabel");
+    tarif = lookup_widget(objet_graphique, "tariflabel");
+    capacite = lookup_widget(objet_graphique, "placeslabel");
+    supp = lookup_widget(objet_graphique, "supplabel");
+    numero = lookup_widget(objet_graphique, "numerolabel");
+    nbetages = lookup_widget(objet_graphique, "nbetagelabel");
+    couvert = lookup_widget(objet_graphique, "couvertlabel");
+
+    gtk_label_set_text(GTK_LABEL(nom), p.nom);
+    gtk_label_set_text(GTK_LABEL(region), p.region);
+    gtk_label_set_text(GTK_LABEL(adresse), p.adresse);
+    gtk_label_set_text(GTK_LABEL(capacite), capacite_str);
+    gtk_label_set_text(GTK_LABEL(nbetages), nbetages_str);
+    gtk_label_set_text(GTK_LABEL(couvert), couvert_str);
+    gtk_label_set_text(GTK_LABEL(supp), supp_str);
+    gtk_label_set_text(GTK_LABEL(tarif), tarif_str);
+    gtk_label_set_text(GTK_LABEL(numero), numero_str);
+
+
+
+
+	GtkWidget *mnom;
+	GtkWidget *mid;
+	GtkWidget *madresse;
+	GtkWidget *mregion;
+	GtkWidget *mplaces;
+	GtkWidget *mnbetages;
+	GtkWidget *mcouvert;
+	GtkWidget *mnumero;
+	GtkWidget *mtarif;
+	GtkWidget *output;
+	mnom=lookup_widget(objet_graphique,"modifier_pnom");
+	madresse=lookup_widget(objet_graphique,"modifier_padresse");
+	mregion=lookup_widget(objet_graphique,"combobox_modifier_pregion");
+	mplaces=lookup_widget(objet_graphique,"modifier_pplaces");
+	mnbetages=lookup_widget(objet_graphique,"modifier_pnbetages");
+
+	mnumero=lookup_widget(objet_graphique,"modifier_pnumero");
+	mtarif=lookup_widget(objet_graphique,"modifier_ptarif");
+	gtk_entry_set_text(GTK_ENTRY(mnom),p.nom);
+	gtk_entry_set_text(GTK_ENTRY(madresse),p.adresse);
+	gtk_entry_set_text(GTK_ENTRY(mnumero),numero_str);
+	gtk_entry_set_text(GTK_ENTRY(mtarif),tarif_str);
+	if (p.est_couvert=='Y') {
+		output = lookup_widget(objet_graphique, "check_modifier_pcouvert") ;
+		
+		gtk_toggle_button_set_active(GTK_RADIO_BUTTON(output),TRUE);
+	}
+	else {
+		
+		output = lookup_widget(objet_graphique, "check_modifier_pnoncouvert") ;
+		gtk_toggle_button_set_active(GTK_RADIO_BUTTON(output),TRUE);
+	}
+	if (p.supporte_pour_handicappe=='Y') {
+		output = lookup_widget(objet_graphique, "radiobutton_modifier_psup") ;
+		
+		gtk_toggle_button_set_active(GTK_RADIO_BUTTON(output),TRUE);
+	}
+	else {
+		
+		output = lookup_widget(objet_graphique, "radiobutton_modifier_psup") ;
+		gtk_toggle_button_set_active(GTK_RADIO_BUTTON(output),TRUE);
+	}
+	
+	
+	
+	gtk_spin_button_set_value(GTK_SPIN_BUTTON(mplaces),p.capacite);
+
+	gtk_spin_button_set_value(GTK_SPIN_BUTTON(mnbetages),p.nbetages);
+
+	
+	
+	gtk_combo_box_set_active(GTK_COMBO_BOX(mregion),0);
+	int i=0;//gtk_combo_box_get_active_text(GTK_COMBO_BOX(input))
+	while (i<24&&(strcmp(p.region,gtk_combo_box_get_active_text(GTK_COMBO_BOX(mregion)))!=0)){
+		gtk_combo_box_set_active(GTK_COMBO_BOX(mregion),i);
+		i++;
+	}
+	
+	
+}
+
+
+
+
+
+
+void
+on_radiobutton_modifier_pnonsup_toggled
+                                        (GtkToggleButton *togglebutton,
+                                        gpointer         user_data)
+{
+	if(gtk_toggle_button_get_active(GTK_RADIO_BUTTON(togglebutton)))
+	{
+		m_supporte_pour_handicappe='N';
+	}
+
+}
+void
+on_radiobutton_modifier_psup_toggled   (GtkToggleButton *togglebutton,
+                                        gpointer         user_data)
+{
+	if(gtk_toggle_button_get_active(GTK_RADIO_BUTTON(togglebutton)))
+	{
+		m_supporte_pour_handicappe='Y';
+	}
+}
+
+
+void
+on_check_modifier_pcouvert_toggled     (GtkToggleButton *togglebutton,
+                                        gpointer         user_data)
+{
+	if(gtk_toggle_button_get_active(togglebutton))
+	{
+		m_est_couvert ='Y';
+	}
+
+
+}
+
+
+
+
+
+
+
+
+void
+on_modfier_p_annuler_clicked           (GtkWidget       *objet_graphique,
+                                        gpointer         user_data)
+{
+	
+	    GtkWidget *dialog;
+            GtkWindow *parent_window = GTK_WINDOW(gtk_widget_get_toplevel(objet_graphique));
+
+            dialog = gtk_message_dialog_new(
+                parent_window,
+                GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT,
+                GTK_MESSAGE_QUESTION,
+                GTK_BUTTONS_YES_NO,
+                "Êtes-vous sûr de vouloir annuler la modification ?"
+            );
+
+            gtk_message_dialog_format_secondary_text(
+                GTK_MESSAGE_DIALOG(dialog),
+                "Cette action est irréversible."
+            );
+
+            gint response = gtk_dialog_run(GTK_DIALOG(dialog));
+
+            if (response == GTK_RESPONSE_YES) {
+
+
+		gtk_widget_destroy(dialog);
+                GtkWidget *success_dialog = gtk_message_dialog_new(
+                    GTK_WINDOW(gtk_widget_get_toplevel(objet_graphique)),
+                    GTK_DIALOG_MODAL,
+                    GTK_MESSAGE_INFO,
+                    GTK_BUTTONS_OK,
+                    "Modification annuleé."
+                );
+                gtk_dialog_run(GTK_DIALOG(success_dialog));
+                gtk_widget_destroy(success_dialog);
+
+            } else if (response == GTK_RESPONSE_NO) {
+
+		gtk_widget_destroy(dialog);
+                GtkWidget *cancel_dialog = gtk_message_dialog_new(
+                    GTK_WINDOW(gtk_widget_get_toplevel(objet_graphique)),
+                    GTK_DIALOG_MODAL,
+                    GTK_MESSAGE_INFO,
+                    GTK_BUTTONS_OK,
+                    "Annulation annulée."
+                );
+                gtk_dialog_run(GTK_DIALOG(cancel_dialog));
+                gtk_widget_destroy(cancel_dialog);
+		return;
+            }
+
+
+
+	
+
+
+
+    GtkWidget* id;
+    GtkWidget* nom;
+    GtkWidget* adresse;
+    GtkWidget* region;
+    GtkWidget* capacite;
+    GtkWidget* nbetages;
+    GtkWidget* couvert;
+    GtkWidget* supp;
+    GtkWidget* numero;
+    GtkWidget* tarif;
+    int idr;
+    char capacite_str[20];
+    char nbetages_str[20];
+    char numero_str[20];
+    char tarif_str[20];
+
+    id = lookup_widget(objet_graphique, "modifier_id");
+    const char *id_text = gtk_entry_get_text(GTK_ENTRY(id));
+
+    if (!is_only_digits(id_text)) {
+        GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(gtk_widget_get_toplevel(objet_graphique)),
+                                                   GTK_DIALOG_MODAL,
+                                                   GTK_MESSAGE_ERROR,
+                                                   GTK_BUTTONS_OK,
+                                                   "Le champ 'id' doit contenir uniquement des chiffres !");
+        gtk_dialog_run(GTK_DIALOG(dialog));
+        gtk_widget_destroy(dialog);
+        return;
+    } else {
+        idr = atoi(id_text);
+
+    }
+
+    Parking p = rechercherParking("parking.txt", idr);
+    char msg[100];
+
+ 
+
+
+
+
+    nom = lookup_widget(objet_graphique, "nomlabel");
+    region = lookup_widget(objet_graphique, "regionlabel");
+    adresse = lookup_widget(objet_graphique, "adresselabel");
+    tarif = lookup_widget(objet_graphique, "tariflabel");
+    capacite = lookup_widget(objet_graphique, "placeslabel");
+    supp = lookup_widget(objet_graphique, "supplabel");
+    numero = lookup_widget(objet_graphique, "numerolabel");
+    nbetages = lookup_widget(objet_graphique, "nbetagelabel");
+    couvert = lookup_widget(objet_graphique, "couvertlabel");
+
+    gtk_label_set_text(GTK_LABEL(nom), "");
+    gtk_label_set_text(GTK_LABEL(region), "");
+    gtk_label_set_text(GTK_LABEL(adresse), "");
+    gtk_label_set_text(GTK_LABEL(capacite), "");
+    gtk_label_set_text(GTK_LABEL(nbetages), "");
+    gtk_label_set_text(GTK_LABEL(couvert), "");
+    gtk_label_set_text(GTK_LABEL(supp), "");
+    gtk_label_set_text(GTK_LABEL(tarif), "");
+    gtk_label_set_text(GTK_LABEL(numero), "");
+
+
+
+
+	GtkWidget *mnom;
+	GtkWidget *mid;
+	GtkWidget *madresse;
+	GtkWidget *mregion;
+	GtkWidget *mplaces;
+	GtkWidget *mnbetages;
+	GtkWidget *mcouvert;
+	GtkWidget *mnumero;
+	GtkWidget *mtarif;
+	GtkWidget *output;
+	mnom=lookup_widget(objet_graphique,"modifier_pnom");
+	madresse=lookup_widget(objet_graphique,"modifier_padresse");
+	mregion=lookup_widget(objet_graphique,"combobox_modifier_pregion");
+	mplaces=lookup_widget(objet_graphique,"modifier_pplaces");
+	mnbetages=lookup_widget(objet_graphique,"modifier_pnbetages");
+
+	mnumero=lookup_widget(objet_graphique,"modifier_pnumero");
+	mtarif=lookup_widget(objet_graphique,"modifier_ptarif");
+	gtk_entry_set_text(GTK_ENTRY(mnom),"");
+	gtk_entry_set_text(GTK_ENTRY(madresse),"");
+	gtk_entry_set_text(GTK_ENTRY(mnumero),"");
+	gtk_entry_set_text(GTK_ENTRY(mtarif),"");
+
+	output = lookup_widget(objet_graphique, "check_modifier_pcouvert") ;
+		
+	gtk_toggle_button_set_active(GTK_RADIO_BUTTON(output),FALSE);
+	
+	
+	output = lookup_widget(objet_graphique, "check_modifier_pnoncouvert") ;
+	gtk_toggle_button_set_active(GTK_RADIO_BUTTON(output),FALSE);
+	
+
+	output = lookup_widget(objet_graphique, "radiobutton_modifier_psup") ;
+		
+	gtk_toggle_button_set_active(GTK_RADIO_BUTTON(output),FALSE);
+	
+		
+	output = lookup_widget(objet_graphique, "radiobutton_modifier_psup") ;
+	gtk_toggle_button_set_active(GTK_RADIO_BUTTON(output),FALSE);
+	
+	
+	
+	
+	gtk_spin_button_set_value(GTK_SPIN_BUTTON(mplaces),0.0);
+
+	gtk_spin_button_set_value(GTK_SPIN_BUTTON(mnbetages),0.0);
+
+	
+	
+	gtk_combo_box_set_active(GTK_COMBO_BOX(mregion),-1);
+	
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+void
+on_modifier_p_button_clicked (GtkWidget *objet_graphique, gpointer user_data)
+
+
+
+{ 
+	if(id_p_a_modif==-1){
+		GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(gtk_widget_get_toplevel(objet_graphique)),
+                                                   GTK_DIALOG_MODAL,
+                                                   GTK_MESSAGE_ERROR,
+                                                   GTK_BUTTONS_OK,
+                                                   "Utilisez le boutton 'Selectioner' au premier lieux");
+        	gtk_dialog_run(GTK_DIALOG(dialog));
+        	gtk_widget_destroy(dialog);
+		return;
+		
+	}	
+	
+	GtkWidget *nom;
+	GtkWidget *id;
+	GtkWidget *adresse;
+	GtkWidget *region;
+	GtkWidget *places;
+	GtkWidget *nbetages;
+	GtkWidget *couvert;
+	GtkWidget *numero;
+	GtkWidget *tarif;
+	Parking p;
+	int idr;
+	id = lookup_widget(objet_graphique, "modifier_id");
+	const char *id_text = gtk_entry_get_text(GTK_ENTRY(id));
+
+	if (!is_only_digits(id_text)) {
+        	GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(gtk_widget_get_toplevel(objet_graphique)),
+                                                   GTK_DIALOG_MODAL,
+                                                   GTK_MESSAGE_ERROR,
+                                                   GTK_BUTTONS_OK,
+                                                   "Le champ 'id' doit contenir uniquement des chiffres !");
+        	gtk_dialog_run(GTK_DIALOG(dialog));
+        	gtk_widget_destroy(dialog);
+        	return;
+	} else {
+        	idr = atoi(id_text);
+    	}
+
+	nom=lookup_widget(objet_graphique,"modifier_pnom");
+	adresse=lookup_widget(objet_graphique,"modifier_padresse");
+	region=lookup_widget(objet_graphique,"combobox_modifier_pregion");
+	places=lookup_widget(objet_graphique,"modifier_pplaces");
+	nbetages=lookup_widget(objet_graphique,"modifier_pnbetages");
+
+	numero=lookup_widget(objet_graphique,"modifier_pnumero");
+	tarif=lookup_widget(objet_graphique,"modifier_ptarif");
+
+	strcpy(p.nom,gtk_entry_get_text(GTK_ENTRY(nom)));
+	strcpy(p.adresse,gtk_entry_get_text(GTK_ENTRY(adresse)));
+	const char *tarif_text = gtk_entry_get_text(GTK_ENTRY(tarif));
+    
+        if (tarif_text != NULL && tarif_text[0] != '\0') 
+	{
+        	p.tarif = atoi(tarif_text); 
+    	} else  {
+        		p.tarif = 0; 
+    		}
+
+	const char *numero_text = gtk_entry_get_text(GTK_ENTRY(numero));
+    
+        if (numero_text != NULL && numero_text[0] != '\0') 
+	{
+        	p.numero_de_telephone = atoi(numero_text); 
+    	} 
+	else  
+	{
+        	p.numero_de_telephone = 0; 
+    	}
+	
+
+	strcpy(p.region,gtk_combo_box_get_active_text(GTK_COMBO_BOX(region)));
+	p.capacite=gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(places));
+	p.nbetages=gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(nbetages));
+	p.est_couvert=m_est_couvert;
+	p.supporte_pour_handicappe=m_supporte_pour_handicappe;
+
+
+
+
+
+	
+	if (strlen(p.nom) == 0) {
+		GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(gtk_widget_get_toplevel(objet_graphique)),
+                                               GTK_DIALOG_MODAL,
+                                               GTK_MESSAGE_ERROR,
+                                               GTK_BUTTONS_OK,
+                                               "Le champ 'Nom' est obligatoire !");
+		gtk_dialog_run(GTK_DIALOG(dialog));
+		gtk_widget_destroy(dialog);
+		return;
+	}
+	if (!is_only_alpha(p.nom)) {
+		GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(gtk_widget_get_toplevel(objet_graphique)),
+                                                   GTK_DIALOG_MODAL,
+                                                   GTK_MESSAGE_ERROR,
+                                                   GTK_BUTTONS_OK,
+                                                   "Le champ 'Nom' doit contenir uniquement des lettres !");
+		gtk_dialog_run(GTK_DIALOG(dialog));
+		gtk_widget_destroy(dialog);
+		return;
+	}
+
+	if (gtk_combo_box_get_active(GTK_COMBO_BOX(region)) == -1) {
+    		GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(gtk_widget_get_toplevel(objet_graphique)),
+                                               	GTK_DIALOG_MODAL,
+                                               	GTK_MESSAGE_ERROR,
+                                               	GTK_BUTTONS_OK,
+                                               	"Veuillez sélectionner une région !");
+		gtk_dialog_run(GTK_DIALOG(dialog));
+                gtk_widget_destroy(dialog);
+                return;
+	}
+
+
+
+	if (strlen(p.adresse) == 0) {
+        	GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(gtk_widget_get_toplevel(objet_graphique)),
+                                                   GTK_DIALOG_MODAL,
+                                                   GTK_MESSAGE_ERROR,
+                                                   GTK_BUTTONS_OK,
+                                                   "Le champ 'Adresse' est obligatoire !");
+        	gtk_dialog_run(GTK_DIALOG(dialog));
+        	gtk_widget_destroy(dialog);
+        	return;
+	}
+
+
+
+
+	if (p.tarif <= 0) 
+	{
+	    	GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(gtk_widget_get_toplevel(objet_graphique)),
+	                                               GTK_DIALOG_MODAL,
+	                                               GTK_MESSAGE_ERROR,
+	                                               GTK_BUTTONS_OK,
+	                                               "Veuillez saisir un tarif valide !");	
+		gtk_dialog_run(GTK_DIALOG(dialog));	
+		gtk_widget_destroy(dialog);
+    		return;
+	}
+
+	
+	
+	if (numero_text != NULL && strlen(numero_text)==8) {
+        	if (!is_only_digits(numero_text)) {
+            		GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(gtk_widget_get_toplevel(objet_graphique)),
+                                                       GTK_DIALOG_MODAL,
+                                                       GTK_MESSAGE_ERROR,
+                                                       GTK_BUTTONS_OK,
+                                                       "Le champ 'Numero de telephone' doit contenir uniquement des chiffres !");
+			gtk_dialog_run(GTK_DIALOG(dialog));
+			gtk_widget_destroy(dialog);
+			return;
+        }
+
+
+
+
+
+	    char msg [120];
+	    GtkWidget *dialog;
+            GtkWindow *parent_window = GTK_WINDOW(gtk_widget_get_toplevel(objet_graphique));
+	    sprintf(msg,"Êtes-vous sûr de vouloir modifier le Parking %d ?",idr);
+            dialog = gtk_message_dialog_new(
+                parent_window,
+                GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT,
+                GTK_MESSAGE_QUESTION,
+                GTK_BUTTONS_YES_NO,
+                msg
+            );
+
+            gtk_message_dialog_format_secondary_text(
+                GTK_MESSAGE_DIALOG(dialog),
+                "Cette action est irréversible."
+            );
+
+            gint response = gtk_dialog_run(GTK_DIALOG(dialog));
+
+            if (response == GTK_RESPONSE_YES) {
+
+		modifierParking("parking.txt", idr, p);
+		id_p_a_modif=-1;
+		sprintf(msg,"Parking %d modifié avec succès.",idr);
+		gtk_widget_destroy(dialog);
+                GtkWidget *success_dialog = gtk_message_dialog_new(
+                    GTK_WINDOW(gtk_widget_get_toplevel(objet_graphique)),
+                    GTK_DIALOG_MODAL,
+                    GTK_MESSAGE_INFO,
+                    GTK_BUTTONS_OK,
+                    msg
+                );
+                gtk_dialog_run(GTK_DIALOG(success_dialog));
+                gtk_widget_destroy(success_dialog);
+
+            } else if (response == GTK_RESPONSE_NO) {
+
+		gtk_widget_destroy(dialog);
+                GtkWidget *cancel_dialog = gtk_message_dialog_new(
+                    GTK_WINDOW(gtk_widget_get_toplevel(objet_graphique)),
+                    GTK_DIALOG_MODAL,
+                    GTK_MESSAGE_INFO,
+                    GTK_BUTTONS_OK,
+                    "modification annulée."
+                );
+                gtk_dialog_run(GTK_DIALOG(cancel_dialog));
+                gtk_widget_destroy(cancel_dialog);
+            }
+
+
+
+
+
+
+
+	}
+
+
+	
+	
+
+}
+
+
+
+
+
+void
+on_check_modifier_pnoncouvert_toggled  (GtkToggleButton *togglebutton,
+                                        gpointer         user_data)
+{
+	if(gtk_toggle_button_get_active(togglebutton))
+	{
+		m_est_couvert ='N';
+	}
+
+}
+
+
+void
+on_suppreimer_p_button_clicked(GtkWidget *objet_graphique, gpointer user_data) {
+    int idr;
+    GtkWidget *id;
+    id = lookup_widget(objet_graphique, "supprimer_p_identry");
+    const char *id_text = gtk_entry_get_text(GTK_ENTRY(id));
+    char msg[100];
+
+
+    if (!is_only_digits(id_text)) {
+        GtkWidget *dialog = gtk_message_dialog_new(
+            GTK_WINDOW(gtk_widget_get_toplevel(objet_graphique)),
+            GTK_DIALOG_MODAL,
+            GTK_MESSAGE_ERROR,
+            GTK_BUTTONS_OK,
+            "Le champ 'id' doit contenir uniquement des chiffres !"
+        );
+        gtk_dialog_run(GTK_DIALOG(dialog));
+        gtk_widget_destroy(dialog);
+        return;
+    } else {
+        idr = atoi(id_text); 
+        Parking p = rechercherParking("parking.txt", idr); 
+
+        if (p.id == -1) { 
+	    sprintf(msg,"Parking %d introuvable",idr);
+            GtkWidget *dialog = gtk_message_dialog_new(
+                GTK_WINDOW(gtk_widget_get_toplevel(objet_graphique)),
+                GTK_DIALOG_MODAL,
+                GTK_MESSAGE_ERROR,
+                GTK_BUTTONS_OK,
+                msg
+            );
+            gtk_dialog_run(GTK_DIALOG(dialog));
+            gtk_widget_destroy(dialog);
+            return;
+
+
+        } else {
+	    sprintf(msg,"Êtes-vous sûr de vouloir supprimer le Parking %d ?",idr);
+            GtkWidget *dialog;
+            GtkWindow *parent_window = GTK_WINDOW(gtk_widget_get_toplevel(objet_graphique));
+
+            dialog = gtk_message_dialog_new(
+                parent_window,
+                GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT,
+                GTK_MESSAGE_QUESTION,
+                GTK_BUTTONS_YES_NO,
+                msg
+            );
+
+            gtk_message_dialog_format_secondary_text(
+                GTK_MESSAGE_DIALOG(dialog),
+                "Cette action est irréversible."
+            );
+
+            gint response = gtk_dialog_run(GTK_DIALOG(dialog));
+
+            if (response == GTK_RESPONSE_YES) {
+
+                supprimerParking("parking.txt", idr);
+		gtk_widget_destroy(dialog);
+                GtkWidget *success_dialog = gtk_message_dialog_new(
+                    GTK_WINDOW(gtk_widget_get_toplevel(objet_graphique)),
+                    GTK_DIALOG_MODAL,
+                    GTK_MESSAGE_INFO,
+                    GTK_BUTTONS_OK,
+                    "Parking supprimé avec succès."
+                );
+                gtk_dialog_run(GTK_DIALOG(success_dialog));
+                gtk_widget_destroy(success_dialog);
+
+            } else if (response == GTK_RESPONSE_NO) {
+
+		gtk_widget_destroy(dialog);
+                GtkWidget *cancel_dialog = gtk_message_dialog_new(
+                    GTK_WINDOW(gtk_widget_get_toplevel(objet_graphique)),
+                    GTK_DIALOG_MODAL,
+                    GTK_MESSAGE_INFO,
+                    GTK_BUTTONS_OK,
+                    "Suppression annulée."
+                );
+                gtk_dialog_run(GTK_DIALOG(cancel_dialog));
+                gtk_widget_destroy(cancel_dialog);
+            }
+
+
+            
+        }
+    }
+}
+
+
+
+
+
+
+
+void on_rechercher_p_button_clicked(GtkWidget *objet_graphique, gpointer user_data) {
+    
+    int empty ;
+    char msg[120];
+
+    GtkWidget *treeview_chercher_parking;
+    treeview_chercher_parking = lookup_widget(objet_graphique, "treeview_p_rechercher");
+
+
+    if (!treeview_chercher_parking) {
+        g_warning("Treeview not found!");
+        return;
+    }
+
+
+    vider(treeview_chercher_parking);
+
+    if ((recherche_par[0] == 1) && (recherche_par[2] == 0) &&(recherche_par[1]==0)) {
+
+        GtkWidget *id;
+	GtkWidget *output;
+	output=lookup_widget(objet_graphique,"check_rechercher_p_id");
+        id = lookup_widget(objet_graphique, "rechercher_p_id");
+	int idr;
+
+        if (!id) {
+            g_warning("Nom entry not found!");
+            return;
+        }
+
+        char id_str[100];
+        g_strlcpy(id_str, gtk_entry_get_text(GTK_ENTRY(id)), sizeof(id_str));
+
+        if (strlen(id_str) > 0) {
+	    idr=atoi(id_str);
+            rechercherParking("parking.txt", idr);
+
+            afficher_parking("parid.txt", treeview_chercher_parking);
+        }
+
+        recherche_par[0] = 0;
+	//gtk_toggle_button_set_active(GTK_RADIO_BUTTON(output),FALSE);
+        empty = is_file_empty("parid.txt");
+	if (empty==1){
+		sprintf(msg,"Parking %d introuvble ",idr);
+		GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(gtk_widget_get_toplevel(objet_graphique)),
+                                               GTK_DIALOG_MODAL,
+                                               GTK_MESSAGE_ERROR,
+                                               GTK_BUTTONS_OK,
+                                               msg);
+		gtk_dialog_run(GTK_DIALOG(dialog));
+		gtk_widget_destroy(dialog);
+	}
+		
+ 
+        return;
+    }
+
+    if ((recherche_par[1] == 1) && (recherche_par[2] == 0)) {
+
+        GtkWidget *nom;
+        nom = lookup_widget(objet_graphique, "rechercher_p_nom");
+
+        if (!nom) {
+            g_warning("Nom entry not found!");
+            return;
+        }
+
+        char nom_str[100];
+        g_strlcpy(nom_str, gtk_entry_get_text(GTK_ENTRY(nom)), sizeof(nom_str));
+
+        if (strlen(nom_str) > 0) {
+            rechercherParkingParNom("parking.txt", nom_str);
+
+            afficher_parking("parnom.txt", treeview_chercher_parking);
+        }
+
+        //recherche_par[1] = 0;
+	GtkWidget *output;
+	output=lookup_widget(objet_graphique,"check_rechercher_p_nom");
+	//gtk_toggle_button_set_active(GTK_RADIO_BUTTON(output),FALSE); 
+	empty = is_file_empty("parnom.txt");
+	if (empty==1){
+		sprintf(msg,"Pas de parking avec le nom '%s' ",nom_str);
+		GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(gtk_widget_get_toplevel(objet_graphique)),
+                                               GTK_DIALOG_MODAL,
+                                               GTK_MESSAGE_ERROR,
+                                               GTK_BUTTONS_OK,
+                                               msg);
+		gtk_dialog_run(GTK_DIALOG(dialog));
+		gtk_widget_destroy(dialog);
+	} 
+        return;
+
+    }
+
+    if ((recherche_par[2] == 1) && (recherche_par[1] == 0)) {
+
+        GtkWidget *region;
+        region = lookup_widget(objet_graphique, "rechercher_p_region");
+
+        if (!region) {
+            g_warning("Region entry not found!");
+            return;
+        }
+
+        char region_str[100];
+        g_strlcpy(region_str, gtk_entry_get_text(GTK_ENTRY(region)), sizeof(region_str));
+
+        if (strlen(region_str) > 0) {
+            rechercherParkingParRegion("parking.txt", region_str);
+
+            afficher_parking("parregion.txt", treeview_chercher_parking);
+        }
+
+        //recherche_par[2] = 0;
+	GtkWidget *output;
+	output=lookup_widget(objet_graphique,"check_rechercher_p_region");
+	//gtk_toggle_button_set_active(GTK_RADIO_BUTTON(output),FALSE);
+	empty = is_file_empty("parregion.txt");
+	if (empty==1){
+		sprintf(msg,"Pas de parkings dans '%s'",region_str);
+		GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(gtk_widget_get_toplevel(objet_graphique)),
+                                               GTK_DIALOG_MODAL,
+                                               GTK_MESSAGE_ERROR,
+                                               GTK_BUTTONS_OK,
+                                               msg);
+		gtk_dialog_run(GTK_DIALOG(dialog));
+		gtk_widget_destroy(dialog);
+	} 
+	 
+        return;
+    }
+
+    if ((recherche_par[2] == 1) && (recherche_par[1] == 1)){
+        GtkWidget *nom, *region;
+        nom = lookup_widget(objet_graphique, "rechercher_p_nom");
+        region = lookup_widget(objet_graphique, "rechercher_p_region");
+
+        if (!nom || !region) {
+            g_warning("Required entry widget(s) not found!");
+            return;
+        }
+
+        char nom_str[100], region_str[100];
+        g_strlcpy(nom_str, gtk_entry_get_text(GTK_ENTRY(nom)), sizeof(nom_str));
+        g_strlcpy(region_str, gtk_entry_get_text(GTK_ENTRY(region)), sizeof(region_str));
+
+        if (strlen(nom_str) > 0 && strlen(region_str) > 0) {
+            rechercherParkingParNometRegion("parking.txt", nom_str, region_str);
+
+            afficher_parking("parnometregion.txt", treeview_chercher_parking);
+        }
+
+        //recherche_par[1] = 0;
+        //recherche_par[2] = 0;
+	/*GtkWidget *output;
+	output=lookup_widget(objet_graphique,"check_rechercher_p_nom");
+	gtk_toggle_button_set_active(GTK_RADIO_BUTTON(output),FALSE);
+	output=lookup_widget(objet_graphique,"check_rechercher_p_region");
+	gtk_toggle_button_set_active(GTK_RADIO_BUTTON(output),FALSE);*/
+	empty = is_file_empty("parnometregion.txt");
+	if (empty==1){
+		sprintf(msg,"Pas de parkings avec le nom '%s' dans '%s'",nom_str,region_str);
+		GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(gtk_widget_get_toplevel(objet_graphique)),
+                                               GTK_DIALOG_MODAL,
+                                               GTK_MESSAGE_ERROR,
+                                               GTK_BUTTONS_OK,
+                                               msg);
+		gtk_dialog_run(GTK_DIALOG(dialog));
+		gtk_widget_destroy(dialog);
+	}
+        return;
+    }
+
+
+
+
+}
+
+
+
+
+
+void
+on_check_rechercher_p_id_toggled       (GtkToggleButton *togglebutton,
+                                        gpointer         user_data)
+{
+	GtkWidget *output;
+	output=lookup_widget(togglebutton,"check_rechercher_p_nom");
+	gtk_toggle_button_set_active(GTK_RADIO_BUTTON(output),FALSE);
+	output=lookup_widget(togglebutton,"check_rechercher_p_region");
+	gtk_toggle_button_set_active(GTK_RADIO_BUTTON(output),FALSE);
+ 
+
+	recherche_par[0]=1;
+	if (!gtk_toggle_button_get_active(togglebutton)) {
+		recherche_par[0]=0;;
+	}
+
+
+
+}
+
+
+void
+on_check_rechercher_p_region_toggled   (GtkToggleButton *togglebutton,
+                                        gpointer         user_data)
+{
+
+
+	if (etat==1) return;
+	if (recherche_par[0]==1){
+		etat=1;
+		GtkWidget *output;
+		output=lookup_widget(togglebutton,"check_rechercher_p_nom");
+		gtk_toggle_button_set_active(GTK_RADIO_BUTTON(output),FALSE);
+		output=lookup_widget(togglebutton,"check_rechercher_p_region");
+		gtk_toggle_button_set_active(GTK_RADIO_BUTTON(output),FALSE);
+		GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(gtk_widget_get_toplevel(togglebutton)),
+	                                               GTK_DIALOG_MODAL,
+	                                               GTK_MESSAGE_ERROR,
+	                                               GTK_BUTTONS_OK,
+	                                               "Vous ne pouvez pas selctioner ce critere lorsque le critere 'id' est selectionne");	
+		gtk_dialog_run(GTK_DIALOG(dialog));	
+		gtk_widget_destroy(dialog);
+		etat=0;
+		return;
+	}
+
+	recherche_par[2]=1;
+	if (!gtk_toggle_button_get_active(togglebutton)) {
+		recherche_par[2]=0;;
+	}
+		
+		
+
+}
+
+
+void
+on_check_rechercher_p_nom_toggled      (GtkToggleButton *togglebutton,
+                                        gpointer         user_data)
+{
+
+
+	if (etat==1) return;
+	if (recherche_par[0]==1){
+		etat=1;
+		GtkWidget *output;
+		output=lookup_widget(togglebutton,"check_rechercher_p_nom");
+		gtk_toggle_button_set_active(GTK_RADIO_BUTTON(output),FALSE);
+		output=lookup_widget(togglebutton,"check_rechercher_p_region");
+		gtk_toggle_button_set_active(GTK_RADIO_BUTTON(output),FALSE);
+		GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(gtk_widget_get_toplevel(togglebutton)),
+	                                               GTK_DIALOG_MODAL,
+	                                               GTK_MESSAGE_ERROR,
+	                                               GTK_BUTTONS_OK,
+	                                               "Vous ne pouvez pas selctioner ce critere lorsque le critere 'id' est selectionne");	
+		gtk_dialog_run(GTK_DIALOG(dialog));	
+		gtk_widget_destroy(dialog);
+		etat=0;
+		return;
+	}
+
+	recherche_par[1]=1;
+		if (!gtk_toggle_button_get_active(togglebutton)) {
+		recherche_par[1]=0;;
+	}
+
+}
+
+void
+on_treeview_p_rechercher_row_activated (GtkTreeView     *treeview,
+                                        GtkTreePath     *path,
+                                        GtkTreeViewColumn *column,
+                                        gpointer         user_data) {
+    GtkTreeIter iter;
+    gchar *id_str;
+    int id;
+
+    GtkTreeModel *model = gtk_tree_view_get_model(treeview);
+
+    if (gtk_tree_model_get_iter(model, &iter, path)) {
+
+        gtk_tree_model_get(GTK_LIST_STORE(model), &iter,
+                           0, &id_str,  
+                           -1);
+
+        
+        id = atoi(id_str);
+	char msg [120];
+	    GtkWidget *dialog;
+            GtkWindow *parent_window = GTK_WINDOW(gtk_widget_get_toplevel(treeview));
+	    sprintf(msg,"Êtes-vous sûr de vouloir supprimer le Parking %d ?",id);
+            dialog = gtk_message_dialog_new(
+                parent_window,
+                GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT,
+                GTK_MESSAGE_QUESTION,
+                GTK_BUTTONS_YES_NO,
+                msg
+            );
+
+            gtk_message_dialog_format_secondary_text(
+                GTK_MESSAGE_DIALOG(dialog),
+                "Cette action est irréversible."
+            );
+
+            gint response = gtk_dialog_run(GTK_DIALOG(dialog));
+
+            if (response == GTK_RESPONSE_YES) {
+
+        	supprimerParking("parking.txt", id);
+		/*vider(treeview);
+        	afficher_parking("parking.txt", treeview);*/
+		on_rechercher_p_button_clicked(treeview,user_data);
+
+		sprintf(msg,"Parking %d supprime avec succès.",id);
+		gtk_widget_destroy(dialog);
+                GtkWidget *success_dialog = gtk_message_dialog_new(
+                    GTK_WINDOW(gtk_widget_get_toplevel(treeview)),
+                    GTK_DIALOG_MODAL,
+                    GTK_MESSAGE_INFO,
+                    GTK_BUTTONS_OK,
+                    msg
+                );
+                gtk_dialog_run(GTK_DIALOG(success_dialog));
+                gtk_widget_destroy(success_dialog);
+
+            } else if (response == GTK_RESPONSE_NO) {
+
+		gtk_widget_destroy(dialog);
+                GtkWidget *cancel_dialog = gtk_message_dialog_new(
+                    GTK_WINDOW(gtk_widget_get_toplevel(treeview)),
+                    GTK_DIALOG_MODAL,
+                    GTK_MESSAGE_INFO,
+                    GTK_BUTTONS_OK,
+                    "suprission annulée."
+                );
+                gtk_dialog_run(GTK_DIALOG(cancel_dialog));
+                gtk_widget_destroy(cancel_dialog);
+            }
+	
+
+
+
+
+  
+    }
+}
+
+
+
+void
+on_treeview_afficher_parking_row_activated
+                                        (GtkTreeView     *treeview,
+                                        GtkTreePath     *path,
+                                        GtkTreeViewColumn *column,
+                                        gpointer         user_data)
+{
+	    GtkTreeIter iter;
+    gchar *id_str;
+    int id;
+
+    GtkTreeModel *model = gtk_tree_view_get_model(treeview);
+
+    if (gtk_tree_model_get_iter(model, &iter, path)) {
+
+        gtk_tree_model_get(GTK_LIST_STORE(model), &iter,
+                           0, &id_str,  
+                           -1);
+
+
+        id = atoi(id_str);
+            GtkWidget *dialog;
+            GtkWindow *parent_window = GTK_WINDOW(gtk_widget_get_toplevel(treeview));
+
+            dialog = gtk_message_dialog_new(
+                parent_window,
+                GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT,
+                GTK_MESSAGE_QUESTION,
+                GTK_BUTTONS_YES_NO,
+                "Êtes-vous sûr de vouloir supprimer ?"
+            );
+
+            gtk_message_dialog_format_secondary_text(
+                GTK_MESSAGE_DIALOG(dialog),
+                "Cette action est irréversible."
+            );
+
+            gint response = gtk_dialog_run(GTK_DIALOG(dialog));
+
+            if (response == GTK_RESPONSE_YES) {
+
+                supprimerParking("parking.txt", id);
+		gtk_widget_destroy(dialog);
+                GtkWidget *success_dialog = gtk_message_dialog_new(
+                    GTK_WINDOW(gtk_widget_get_toplevel(treeview)),
+                    GTK_DIALOG_MODAL,
+                    GTK_MESSAGE_INFO,
+                    GTK_BUTTONS_OK,
+                    "Parking supprimé avec succès."
+                );
+                gtk_dialog_run(GTK_DIALOG(success_dialog));
+                gtk_widget_destroy(success_dialog);
+
+            } else if (response == GTK_RESPONSE_NO) {
+
+		gtk_widget_destroy(dialog);
+                GtkWidget *cancel_dialog = gtk_message_dialog_new(
+                    GTK_WINDOW(gtk_widget_get_toplevel(treeview)),
+                    GTK_DIALOG_MODAL,
+                    GTK_MESSAGE_INFO,
+                    GTK_BUTTONS_OK,
+                    "Suppression annulée."
+                );
+                gtk_dialog_run(GTK_DIALOG(cancel_dialog));
+                gtk_widget_destroy(cancel_dialog);
+            }
+  
+
+
+        //supprimerParking("parking.txt", id);
+
+
+	vider(treeview);
+        afficher_parking("parking.txt", treeview);  
+    }
+
+}
+
+
+void
+on_aficher_parking_clicked (GtkWidget *objet_graphique, gpointer user_data)
+{
+	GtkWidget *treeview_aff_parking;
+	treeview_aff_parking = lookup_widget(objet_graphique, "treeview_afficher_parking");
+
+
+	if (!treeview_aff_parking) {
+        	g_warning("Treeview not found!");
+        	return;
+	}
+
+
+	vider(treeview_aff_parking);
+	afficher_parking("parking.txt",treeview_aff_parking );
+	
+
+	
+
+}
+
+
+void on_affecter_agent_button_clicked(GtkWidget  *objet_graphique,gpointer user_data)
+{
+	
+	GtkWidget *idparking,*idagent;
+	idparking=lookup_widget(GTK_WIDGET(objet_graphique), "id_p_affecter_entry");
+	idagent=lookup_widget(GTK_WIDGET(objet_graphique), "id_a_affecter_entry");
+	int id_a,id_p;
+	const char *id_text = gtk_entry_get_text(GTK_ENTRY(idparking));
+	if (!is_only_digits(id_text)) {
+        GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(gtk_widget_get_toplevel(objet_graphique)),
+                                                   GTK_DIALOG_MODAL,
+                                                   GTK_MESSAGE_ERROR,
+                                                   GTK_BUTTONS_OK,
+                                                   "Le champ 'id parking' doit contenir uniquement des chiffres !");
+        gtk_dialog_run(GTK_DIALOG(dialog));
+        gtk_widget_destroy(dialog);
+        return;
+        } else {
+        	id_p= atoi(id_text);
+        }
+	id_text = gtk_entry_get_text(GTK_ENTRY(idagent));
+	if (!is_only_digits(id_text)) {
+        GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(gtk_widget_get_toplevel(objet_graphique)),
+                                                   GTK_DIALOG_MODAL,
+                                                   GTK_MESSAGE_ERROR,
+                                                   GTK_BUTTONS_OK,
+                                                   "Le champ 'id agent' doit contenir uniquement des chiffres !");
+        gtk_dialog_run(GTK_DIALOG(dialog));
+        gtk_widget_destroy(dialog);
+        return;
+        } else {
+        	id_a= atoi(id_text);
+        }
+	
+        Parking p = rechercherParking("parking.txt", id_p);
+	if (p.id==-1) {
+        GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(gtk_widget_get_toplevel(objet_graphique)),
+                                                   GTK_DIALOG_MODAL,
+                                                   GTK_MESSAGE_ERROR,
+                                                   GTK_BUTTONS_OK,
+                                                   "parking introuvable");
+        gtk_dialog_run(GTK_DIALOG(dialog));
+        gtk_widget_destroy(dialog);
+	return;
+	}
+	agent a =rechercher_agent("agent.txt",id_a);
+	if (a.cin_a==-1) {
+        GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(gtk_widget_get_toplevel(objet_graphique)),
+                                                   GTK_DIALOG_MODAL,
+                                                   GTK_MESSAGE_ERROR,
+                                                   GTK_BUTTONS_OK,
+                                                   "Agent introuvable");
+        gtk_dialog_run(GTK_DIALOG(dialog));
+        gtk_widget_destroy(dialog);
+	return;
+	}
+//yesno
+		
+	    GtkWidget *dialog;
+            GtkWindow *parent_window = GTK_WINDOW(gtk_widget_get_toplevel(objet_graphique));
+	    char msg [100];
+	    sprintf(msg,"Êtes-vous sûr de vouloir affecter agent '%d' au parking '%d' ",id_a,id_p);
+
+            dialog = gtk_message_dialog_new(
+                parent_window,
+                GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT,
+                GTK_MESSAGE_QUESTION,
+                GTK_BUTTONS_YES_NO,
+                msg
+            );
+
+            gtk_message_dialog_format_secondary_text(
+                GTK_MESSAGE_DIALOG(dialog),
+                ""
+            );
+
+            gint response = gtk_dialog_run(GTK_DIALOG(dialog));
+
+            if (response == GTK_RESPONSE_YES) {
+	    sprintf(msg,"Agent '%d'affecte au parking '%d' ",id_a,id_p);
+	    affecteragent("parking.txt","agent.txt",id_p,id_a);
+
+
+		gtk_widget_destroy(dialog);
+                GtkWidget *success_dialog = gtk_message_dialog_new(
+                    GTK_WINDOW(gtk_widget_get_toplevel(objet_graphique)),
+                    GTK_DIALOG_MODAL,
+                    GTK_MESSAGE_INFO,
+                    GTK_BUTTONS_OK,
+                    msg
+                );
+                gtk_dialog_run(GTK_DIALOG(success_dialog));
+                gtk_widget_destroy(success_dialog);
+
+            } else if (response == GTK_RESPONSE_NO) {
+
+		gtk_widget_destroy(dialog);
+                GtkWidget *cancel_dialog = gtk_message_dialog_new(
+                    GTK_WINDOW(gtk_widget_get_toplevel(objet_graphique)),
+                    GTK_DIALOG_MODAL,
+                    GTK_MESSAGE_INFO,
+                    GTK_BUTTONS_OK,
+                    "Affectation annulée."
+                );
+                gtk_dialog_run(GTK_DIALOG(cancel_dialog));
+                gtk_widget_destroy(cancel_dialog);
+		return;
+            }
+
+	
+
+
+	
+
+}
+
+
+void
+on_affecter_treeview_parking_row_activated
+                                        (GtkTreeView     *treeview,
+                                        GtkTreePath     *path,
+                                        GtkTreeViewColumn *column,
+                                        gpointer         user_data)
+{
+    GtkTreeIter iter;
+    gchar *id_str;
+    
+    GtkTreeModel *model = gtk_tree_view_get_model(treeview);
+
+    if (gtk_tree_model_get_iter(model, &iter, path)) {
+
+        gtk_tree_model_get(GTK_LIST_STORE(model), &iter,
+                           0, &id_str,  
+                           -1);
+
+        
+	char idp_text[20];
+        id_parking_affecter = atoi(id_str);
+	sprintf(idp_text, "%d" ,id_parking_affecter);
+	GtkWidget *entry = lookup_widget(GTK_WIDGET(treeview), "id_p_affecter_entry");
+	gtk_entry_set_text(GTK_ENTRY(entry),idp_text);
+
+
+        
+
+        
+
+
+        g_free(id_str);
+    }
+}
+
+
+
+void
+on_affecte_treeview_agent_row_activated
+                                        (GtkTreeView     *treeview,
+                                        GtkTreePath     *path,
+                                        GtkTreeViewColumn *column,
+                                        gpointer         user_data)
+{
+    GtkTreeIter iter;
+    gchar *id_str;
+
+    
+    
+
+    GtkTreeModel *model = gtk_tree_view_get_model(treeview);
+
+    if (gtk_tree_model_get_iter(model, &iter, path)) {
+
+        gtk_tree_model_get(GTK_LIST_STORE(model), &iter,
+                           0, &id_str,  
+                           -1);
+
+        id_agent_affecter =atoi(id_str);
+	char ida_text[20];
+
+	sprintf(ida_text, "%d" ,id_agent_affecter);
+	GtkWidget *entry = lookup_widget(GTK_WIDGET(treeview), "id_a_affecter_entry");
+	gtk_entry_set_text(GTK_ENTRY(entry),ida_text);
+
+	
+	g_free(id_str);
+	
+
+	}
+}
+
+
+void
+on_affecteragent_afficherbutton_clicked
+                                        (GtkWidget      *objet_graphique,
+                                        gpointer         user_data)
+{
+	GtkWidget *treeview_affecter_parking;
+	treeview_affecter_parking = lookup_widget(objet_graphique, "affecter_treeview_parking");
+
+
+	if (!treeview_affecter_parking) {
+        	g_warning("Treeview not found!");
+        	return;
+	}
+
+
+	vider(treeview_affecter_parking);
+	afficher_parkingsansagent("parking.txt",treeview_affecter_parking );
+
+
+
+
+	GtkWidget *treeview_affecter_agent;
+	treeview_affecter_agent = lookup_widget(objet_graphique, "affecte_treeview_agent");
+
+
+	if (!treeview_affecter_agent) {
+        	g_warning("Treeview not found!");
+        	return;
+	}
+
+
+	vider_agent(treeview_affecter_agent);
+	afficheragentsansparking("agent.txt",treeview_affecter_agent );
+
+}
+
+
+
+//zaab
+
+void
+on_annul_ajout_button_clicked          (GtkWidget      *objet_graphique,
+                                        gpointer         user_data)
+{
+	
+
+	GtkWidget *dialog;
+            GtkWindow *parent_window = GTK_WINDOW(gtk_widget_get_toplevel(objet_graphique));
+
+            dialog = gtk_message_dialog_new(
+                parent_window,
+                GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT,
+                GTK_MESSAGE_QUESTION,
+                GTK_BUTTONS_YES_NO,
+                "Êtes-vous sûr de vouloir annuler l´ajout de ce parking ?"
+            );
+
+            gtk_message_dialog_format_secondary_text(
+                GTK_MESSAGE_DIALOG(dialog),
+                "Cette action est irréversible."
+            );
+
+            gint response = gtk_dialog_run(GTK_DIALOG(dialog));
+
+            if (response == GTK_RESPONSE_YES) {
+
+
+		gtk_widget_destroy(dialog);
+                GtkWidget *success_dialog = gtk_message_dialog_new(
+                    GTK_WINDOW(gtk_widget_get_toplevel(objet_graphique)),
+                    GTK_DIALOG_MODAL,
+                    GTK_MESSAGE_INFO,
+                    GTK_BUTTONS_OK,
+                    "Ajout annuleé."
+                );
+                gtk_dialog_run(GTK_DIALOG(success_dialog));
+                gtk_widget_destroy(success_dialog);
+
+            } else if (response == GTK_RESPONSE_NO) {
+
+		gtk_widget_destroy(dialog);
+                GtkWidget *cancel_dialog = gtk_message_dialog_new(
+                    GTK_WINDOW(gtk_widget_get_toplevel(objet_graphique)),
+                    GTK_DIALOG_MODAL,
+                    GTK_MESSAGE_INFO,
+                    GTK_BUTTONS_OK,
+                    "Annulation annulée."
+                );
+                gtk_dialog_run(GTK_DIALOG(cancel_dialog));
+                gtk_widget_destroy(cancel_dialog);
+		return;
+            }
+	
+
+
+
+	GtkWidget *nom;
+	GtkWidget *adresse;
+	GtkWidget *region;
+	GtkWidget *places;
+	GtkWidget *nbetages;
+	GtkWidget *couvert;
+	GtkWidget *numero;
+	GtkWidget *tarif;
+
+
+	nom=lookup_widget(objet_graphique,"p_nomtextentry");
+	adresse=lookup_widget(objet_graphique,"p_adressetextentry");
+	region=lookup_widget(objet_graphique,"combobox_p_regionentry");
+	places=lookup_widget(objet_graphique,"spinbutton_pplacesentry");
+	nbetages=lookup_widget(objet_graphique,"spinbutton_pnbetageentry");
+
+	numero=lookup_widget(objet_graphique,"p_numero_textentry");
+	tarif=lookup_widget(objet_graphique,"p_tariftextentry");
+	gtk_entry_set_text(GTK_ENTRY(nom),"");
+	gtk_entry_set_text(GTK_ENTRY(adresse),"");
+	gtk_entry_set_text(GTK_ENTRY(numero),"");
+	gtk_entry_set_text(GTK_ENTRY(tarif),"");
+	gtk_spin_button_set_value(GTK_SPIN_BUTTON(places),0.0);
+	gtk_spin_button_set_value(GTK_SPIN_BUTTON(nbetages),0.0);
+	gtk_combo_box_set_active(GTK_COMBO_BOX(region),-1);
+	GtkWidget *check_b;
+	check_b=lookup_widget(objet_graphique,"checkbutton_pcouvert");
+	gtk_toggle_button_set_active(GTK_RADIO_BUTTON(check_b),FALSE);
+	check_b=lookup_widget(objet_graphique,"checkbutton_pnoncouvert");
+	gtk_toggle_button_set_active(GTK_RADIO_BUTTON(check_b),FALSE);
+	    
+	
+
+
+
 }
 
